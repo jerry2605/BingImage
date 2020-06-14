@@ -19,16 +19,19 @@ import urllib.request
 from bs4 import BeautifulSoup
 import wget
 import os.path
+import argparse
 
 #CN bing link, can access anywhere and only one(two ?) backgroup each day.
 bingLink = 'https://cn.bing.com/?mkt=zh-CN'
 
-savePath = '/Users/haopeng/Documents/BingBest/'
+Path = '/Users/haopeng/Documents/BingBest/'
 
 resolutionRatio = '1920x1080'
 
 
-def downloadBingBg(BingLink, savePath):
+def downloadBingBg(BingLink, savePath = Path):
+    if not os.path.exists(savePath):
+        os.makedirs(savePath)
     html = urllib.request.urlopen(bingLink).read()
     soup = BeautifulSoup(html, 'lxml')
     
@@ -37,13 +40,23 @@ def downloadBingBg(BingLink, savePath):
     bgImageUrl = bgImageUrl.replace('.jpg', '_' + resolutionRatio +'.jpg')
     imageName = bgImageUrl.split('.',1)[1]
     bgImageUrl  = 'https://cn.bing.com' + bgImageUrl
+    imageFullPath = os.path.join(savePath, imageName)
     
-    if os.path.isfile(savePath + imageName):
+    if os.path.isfile(imageFullPath):
         print(imageName + ' is exist, skip downloading')
     else:
-        filename = wget.download(bgImageUrl, savePath + imageName) # –output FILE|DIR output filename or directory
-        print(filename + ' is downloaed to ' + savePath)
+        wget.download(bgImageUrl,imageFullPath) # –output FILE|DIR output filename or directory
+        print("\n" + imageName + ' is downloaed to ' + savePath)
 
 
 if __name__ == '__main__':
-    downloadBingBg(bingLink, savePath)
+    parser= argparse.ArgumentParser()
+    parser.add_argument('p', help="the path to save Bing image")
+    try:
+        # run from command line
+        args = parser.parse_args()
+        downloadBingBg(bingLink, args.p)
+    except:
+        # run from python directly
+        args = parser.parse_args([Path])
+        downloadBingBg(bingLink, args.p)
